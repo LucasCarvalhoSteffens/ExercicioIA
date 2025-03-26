@@ -1,6 +1,6 @@
 import heapq
 
-# Definição do mapa da Romênia como um grafo
+# Definição do mapa da Romênia como um grafo com pesos
 romenia_mapa = {
     'Arad': {'Zerind': 75, 'Timisoara': 118, 'Sibiu': 140},
     'Zerind': {'Arad': 75, 'Oradea': 71},
@@ -33,23 +33,28 @@ heuristica = {
     'Neamt': 234
 }
 
-def busca_gulosa(inicio, destino):
+def busca_a_estrela(inicio, destino):
     fila_prioridade = []
-    heapq.heappush(fila_prioridade, (heuristica[inicio], inicio))
+    heapq.heappush(fila_prioridade, (0 + heuristica[inicio], 0, inicio))
     visitados = set()
     caminho = {}
+    custos = {inicio: 0}
     
     while fila_prioridade:
-        _, cidade_atual = heapq.heappop(fila_prioridade)
+        _, custo_atual, cidade_atual = heapq.heappop(fila_prioridade)
         
         if cidade_atual == destino:
             return reconstruir_caminho(caminho, inicio, destino)
         
         visitados.add(cidade_atual)
         
-        for vizinho in romenia_mapa[cidade_atual]:
-            if vizinho not in visitados:
-                heapq.heappush(fila_prioridade, (heuristica[vizinho], vizinho))
+        for vizinho, custo in romenia_mapa[cidade_atual].items():
+            novo_custo = custo_atual + custo
+            
+            if vizinho not in visitados or novo_custo < custos.get(vizinho, float('inf')):
+                custos[vizinho] = novo_custo
+                prioridade = novo_custo + heuristica[vizinho]
+                heapq.heappush(fila_prioridade, (prioridade, novo_custo, vizinho))
                 caminho[vizinho] = cidade_atual
     
     return None  # Nenhum caminho encontrado
@@ -64,6 +69,6 @@ def reconstruir_caminho(caminho, inicio, destino):
     percurso.append(inicio)
     return list(reversed(percurso))
 
-# Executando a busca gulosa de Arad para Bucharest
-resultado = busca_gulosa('Arad', 'Bucharest')
+# Executando a busca A* de Arad para Bucharest
+resultado = busca_a_estrela('Arad', 'Bucharest')
 print("Caminho encontrado:", resultado)
